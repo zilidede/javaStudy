@@ -1,0 +1,65 @@
+
+/*
+ 搜索框样式
+ */
+*.frame
+{
+    background-image: url("/static/images/background.jpg");
+
+}
+
+*.set
+{
+    text-align: right;
+
+}
+*.login_span{
+    color:#ffffff;
+    font-family: "Microsoft Himalaya";
+    vertical-align:middle;
+
+
+}
+*.login_img{
+    vertical-align:middle;
+
+
+}
+*.menu_img{
+    margin-left: -5px;
+    vertical-align:middle;
+
+
+}
+*.search
+{
+    margin:auto;
+    width:60%;
+    margin-top: 10%;
+
+}
+*.logo
+{
+    height: 100px;
+    width :150px;
+    margin-left: 40%;
+    margin-right: 40%;
+
+}
+
+*.self-input
+{
+
+    height:40px;
+    width: 80%;
+}
+*.self-btn
+{
+    height: 40px;
+    background-color: #0078D7;
+    color: white;
+    width: 15%;
+    border-radius: 5px;
+    border:None;
+
+}
