@@ -72,10 +72,10 @@
     <orderEntry type="library" name="Maven: org.springframework:spring-web:4.3.22.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: mysql:mysql-connector-java:8.0.15" level="project" />
     <orderEntry type="library" name="Maven: com.google.protobuf:protobuf-java:3.6.1" level="project" />
-    <orderEntry type="library" name="Maven: org.xerial:sqlite-jdbc:3.8.9" level="project" />
+    <orderEntry type="library" name="Maven: org.xerial:sqlite-jdbc:3.18.0" level="project" />
     <orderEntry type="library" name="Maven: org.wisdom-framework:sqlite-jdbc:3.8.7_1" level="project" />
     <orderEntry type="library" name="Maven: org.apache.felix:org.apache.felix.ipojo.annotations:1.12.1" level="project" />
     <orderEntry type="library" name="Maven: org.wisdom-framework:abstract-jdbc-driver:0.5" level="project" />
-    <orderEntry type="library" name="Maven: io.netty:netty-all:4.1.35.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-all:4.1.36.Final" level="project" />
   </component>
 </module>
