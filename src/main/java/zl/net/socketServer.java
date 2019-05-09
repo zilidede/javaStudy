@@ -3,6 +3,10 @@ package zl.net;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import zl.zlClass.zlFileIo;
 
@@ -109,7 +113,7 @@ public class socketServer {
 
                 InputStream in = connecter.getInputStream();
                 while (in.available()==0){
-                    continue;
+                    Thread.sleep(100);
                 }
                 byte[] bArr = readInputStream(in);
                 String s = new String(bArr, "utf-8");
@@ -132,6 +136,10 @@ public class socketServer {
 
 
             } catch (IOException e) {
+                e.printStackTrace();
+
+            }
+            catch (InterruptedException e) {
                 e.printStackTrace();
 
             }
@@ -161,10 +169,81 @@ public class socketServer {
 
     }
 
+    class sendTask implements Callable <Void>{
+        private Socket connection;
+        sendTask(Socket connect){
+            connection =connect;
+        }
+        @Override
+        public Void call() {
+            try {
+                InputStream in = connection.getInputStream();
+                while (in.available()==0){
+                    Thread.sleep(100);
+                }
+                byte[] bArr = readInputStream(in);
+                String s = new String(bArr, "utf-8");
+                int len = s.length();
+                System.out.println(s);
+                String recievewMsg = "";
+                if (len <= 0)
+                    recievewMsg = "服务端未收到客户端信息,请重新发送";
+                else {
+                    String clintID = s.substring(s.indexOf("客户端id"), s.indexOf(","));
+                    //System.out.println(clintID);
+                    recievewMsg = "服务端已经收到" + clintID + "的消息，请发送下一条信息";
+                }
+
+
+                // String recievewMsg = "服务端未收到客户端信息,请重新发送";
+                Writer recieveStream = new OutputStreamWriter(connection.getOutputStream(), "utf-8");
+                recieveStream.write(recievewMsg);
+                recieveStream.flush();
+
+
+            } catch (IOException e) {
+                e.printStackTrace();
+
+            }
+            catch (InterruptedException e) {
+                e.printStackTrace();
+
+            }
+            finally {
+                try {
+                    connection.close();
+                } catch (IOException e) {
+                    System.out.println(e);
+                }
+
+            }
+            return null;
+        }
+    }
+    public void acceptMsgMultiprocessPool() {
+        //多线程服务端
+        ExecutorService pool = Executors.newFixedThreadPool(50);
+        try {
+            ServerSocket svSk = new ServerSocket(2628);
+            while (true) {
+                try {
+                    Socket sk = svSk.accept();
+                    Callable<Void> task= new sendTask(sk);
+                    pool.submit(task);
+                } catch (IOException e) {
+                    System.out.println(e);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println(e);
+            return;
+        }
+
+    }
     public static void main(String[] args) {
         socketServer ss = new socketServer();
 
-        ss.acceptMsgMultiprocess();
+        ss.acceptMsgMultiprocessPool();
         // acceptMsg();
     }
 }
