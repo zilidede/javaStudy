@@ -7,6 +7,10 @@
     <context-param>
         <param-name>settingone</param-name>
         <param-value>foo</param-value>
+
     </context-param>
+    <welcome-file-list>
+        <welcome-file>main.jsp</welcome-file>
+    </welcome-file-list>
 
 </web-app>

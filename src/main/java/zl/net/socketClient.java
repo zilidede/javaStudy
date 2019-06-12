@@ -4,11 +4,16 @@ import edu.princeton.cs.algs4.StdRandom;
 import zl.zlClass.zlFileIo;
 
 import java.io.*;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.Socket;
+import java.net.*;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.nio.channels.Channel;
+import java.nio.channels.Channels;
+import java.nio.channels.SocketChannel;
+import java.nio.channels.WritableByteChannel;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.CountDownLatch;
 
 /*
  * @Description: socket客户端
@@ -17,6 +22,7 @@ import java.util.Date;
  * @Date: 2019/4/29 15:28
  */
 public class socketClient {
+    final static SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     public static void testSocket() {
         try (Socket sk = new Socket("dict.org", 2628)) {
             sk.setSoTimeout(15000);
@@ -194,7 +200,6 @@ public class socketClient {
                     NetworkInterface net = NetworkInterface.getByIndex(1);
                     // System.out.println();
                     sk.setSoTimeout(15000);
-
                     SimpleDateFormat df = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
                     String writeMsg = String.format("%s 客户端id号%d ,地址%s对服务端说：你好！",df.format(new Date()),clientId,InetAddress.getLocalHost());
                     OutputStream out = sk.getOutputStream();
@@ -229,14 +234,173 @@ public class socketClient {
         }
     }
     public  void multiprocessSendMsg(){
-        for(int i=0;i<5;i++){
-            new sendMsgThread("192.168.9.13",2628);
+        for(int i=0;i<25;i++){
+            new sendMsgThread("192.168.9.3",2628);
         }
+    }
+    static class AnalogUser extends Thread{
+        //模拟用户姓名
+        String workerName;
+        String openId;
+        String openType;
+        String amount;
+        CountDownLatch latch;
+
+        public AnalogUser(String workerName, String openId, String openType, String amount,
+                          CountDownLatch latch) {
+            super();
+            this.workerName = workerName;
+            this.openId = openId;
+            this.openType = openType;
+            this.amount = amount;
+            this.latch = latch;
+        }
+
+        @Override
+        public void run() {
+            // TODO Auto-generated method stub
+            try {
+                latch.await(); //一直阻塞当前线程，直到计时器的值为0
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            post();//发送post 请求
+
+
+        }
+
+        public void post(){
+            int clientId = StdRandom.uniform(0,100);
+            String result = "";
+            System.out.println("模拟用户： "+workerName+" 开始发送模拟请求  at "+sdf.format(new Date()));
+            try (Socket sk = new Socket("192.168.9.3", 2628)) {
+                InetAddress inAdress = InetAddress.getLocalHost();
+                NetworkInterface net = NetworkInterface.getByIndex(1);
+                // System.out.println();
+                sk.setSoTimeout(15000);
+                SimpleDateFormat df = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
+                String writeMsg = String.format("%s 客户端id号%d ,地址%s对服务端说：你好！",df.format(new Date()),clientId,InetAddress.getLocalHost());
+                OutputStream out = sk.getOutputStream();
+                Writer writer = new OutputStreamWriter(out, "utf-8");
+               // Thread.sleep(1000);
+                if (sk.isClosed()) {
+                    System.out.println("连接已经断开");
+                    return;
+                }
+                writer.write(writeMsg);
+                writer.flush();
+                // byte[] bArr = new byte[sk.getReceiveBufferSize()];
+                //  in.read(bArr);
+                //  if (bArr.length > 1) {
+                //    String s = new String(bArr, "utf-8");
+                //    System.out.println(s);
+
+                //}
+                InputStream in = sk.getInputStream();
+                byte[] acceptArr = new byte[sk.getReceiveBufferSize()];
+                in.read(acceptArr);
+                String acceptMsg = new String(acceptArr, "utf-8");
+                System.out.println(acceptMsg);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            //sendPost("http://localhost:8080/Settlement/wallet/walleroptimisticlock.action", "openId="+openId+"&openType="+openType+"&amount="+amount);
+           // System.out.println("操作结果："+acceptMsg);
+            System.out.println("模拟用户： "+workerName+" 模拟请求结束  at "+sdf.format(new Date()));
+
+        }
+    }
+    public void highConcurrent(){
+
+        //模拟10000人并发请求，用户钱包
+        CountDownLatch latch=new CountDownLatch(1);
+        //模拟10000个用户
+        for(int i=0;i<1000;i++){
+            AnalogUser analogUser = new AnalogUser("user"+i,"58899dcd-46b0-4b16-82df-bdfd0d953bfb"+i,"1","20.024",latch);
+            analogUser.start();
+        }
+        //计数器減一  所有线程释放 并发访问。
+        latch.countDown();
+        System.out.println("所有模拟请求结束  at "+sdf.format(new Date()));
+    }
+    public void chargenClient(){
+        //基于通道的chargen 客户端
+        try{
+            SocketAddress address = new InetSocketAddress("192.168.9.13",2628);
+            SocketChannel client = SocketChannel.open(address);
+            ByteBuffer buffer = ByteBuffer.allocate(74);
+            WritableByteChannel out = Channels.newChannel(System.out);
+            while (true){
+                int  n = client.read(buffer);
+                if (n>0) {
+                    buffer.flip();
+                    out.write(buffer);
+                    buffer.clear();
+                }
+                else if(n== -1){
+                    break;
+                }
+            }
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+    public void integerClient(){
+        //integer 客户端
+        try{
+            SocketAddress address = new InetSocketAddress("192.168.9.13",2628);
+            SocketChannel client = SocketChannel.open(address);
+            ByteBuffer buffer = ByteBuffer.allocate(4);
+            IntBuffer view =buffer.asIntBuffer();
+            WritableByteChannel out = Channels.newChannel(System.out);
+            for(int expected =0;;expected++){
+                client.read(buffer);
+                int  actual = view.get();
+                buffer.clear();
+                view.rewind();
+                if (actual !=expected){
+                    System.err.println("Expected "+ expected +" ;was" +actual);
+                    break;
+                }
+                System.out.println(actual);
+            }
+
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+    public void udpDatagramClient(){
+        try {
+            DatagramSocket socket = new DatagramSocket(0);
+            socket.setSoTimeout(10000);
+            InetAddress host = InetAddress.getByName("192.168.9.13");
+            DatagramPacket request= new DatagramPacket(new byte[1],1,host,13);
+            DatagramPacket reponse= new DatagramPacket(new byte[1024],1024);
+            socket.send(request);
+            socket.receive(reponse);
+            String daytiem = new String (reponse.getData(),0,reponse.getLength(),"US-ASCII");
+            System.out.println(daytiem);
+        }
+        catch (SocketException e){
+            e.printStackTrace();
+
+        }
+        catch (UnknownHostException e){
+            e.printStackTrace();
+
+        }
+        catch (IOException e){
+            e.printStackTrace();
+
+        }
+
     }
     public static void main(String[] args) {
         socketClient sc=new socketClient();
-        sc.multiprocessSendMsg();
-        //sendMsg();
+        sc.udpDatagramClient();
 
     }
 }

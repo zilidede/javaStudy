@@ -21,23 +21,21 @@
 			<form>
 				<input  id = 'username' type="text" class="text" value="E-mail address" onFocus="this.value = '';" onBlur="if (this.value == '') {this.value = 'E-mail address';}" >
 				<input  id = 'password' type="password" value="Password" onFocus="this.value = '';" onBlur="if (this.value == '') {this.value = 'Password';}">
-				<div class="submit"><input type="submit" onClick="onLogin()" value="登 陆" ></div>
+				<div class="submit"><input type="submit" onClick="onLogin()" value="登 陆 " ></div>
 				<div class="clear"></div>
 				<div class="new">
 					<h3><a href="#">忘记 密码 ?</a></h3>
-					<h4><a href="#">新来的 ? 注册点这儿</a></h4>
+					<h4><a href="register" >新来的 ? 注册点这儿</a></h4>
 					<div class="clear"></div>
 				</div>
 			</form>
 		</div>
-
 </body>
 <!--Javascript-->
 <script src="/static/jquery/js/jquery-3.3.1.js"></script>
 <script src="/static/jquery/js/jquery-3.3.1.min.js"></script>
 <script>
     /*－－－ 事件－－－*/
-
     function onLogin() {
         var json =GetJsonData();
         $.ajax({

@@ -103,7 +103,7 @@ form {
   cursor: pointer;
   outline: none;
   padding: 17px 15px;
-  width:100%;
+  width:85%;
   border:3px solid #0bd38a;
   background: #0bd38a;
   border-radius: 0.3em;
@@ -292,13 +292,15 @@ body h1 {
 }
 .submit {
   margin: 0.5em 0;
+  width:68%;
 }
 .app-location input[type="submit"] {
   font-size: 18px;
-  padding: 11px 11px;
+  padding: 18px 18px;
+
   }
   form {
-  width: 87%;
+  width: 50%;
   margin: 0 auto;
 }
 }

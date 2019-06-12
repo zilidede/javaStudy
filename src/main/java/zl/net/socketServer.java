@@ -1,8 +1,15 @@
 package zl.net;
 
 import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -112,7 +119,7 @@ public class socketServer {
             try {
 
                 InputStream in = connecter.getInputStream();
-                while (in.available()==0){
+                while (in.available() == 0) {
                     Thread.sleep(100);
                 }
                 byte[] bArr = readInputStream(in);
@@ -129,7 +136,7 @@ public class socketServer {
                 }
 
 
-               // String recievewMsg = "服务端未收到客户端信息,请重新发送";
+                // String recievewMsg = "服务端未收到客户端信息,请重新发送";
                 Writer recieveStream = new OutputStreamWriter(connecter.getOutputStream(), "utf-8");
                 recieveStream.write(recievewMsg);
                 recieveStream.flush();
@@ -138,12 +145,10 @@ public class socketServer {
             } catch (IOException e) {
                 e.printStackTrace();
 
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 e.printStackTrace();
 
-            }
-            finally {
+            } finally {
                 try {
                     connecter.close();
                 } catch (IOException e) {
@@ -169,16 +174,18 @@ public class socketServer {
 
     }
 
-    class sendTask implements Callable <Void>{
+    class sendTask implements Callable<Void> {
         private Socket connection;
-        sendTask(Socket connect){
-            connection =connect;
+
+        sendTask(Socket connect) {
+            connection = connect;
         }
+
         @Override
         public Void call() {
             try {
                 InputStream in = connection.getInputStream();
-                while (in.available()==0){
+                while (in.available() == 0) {
                     Thread.sleep(100);
                 }
                 byte[] bArr = readInputStream(in);
@@ -204,12 +211,10 @@ public class socketServer {
             } catch (IOException e) {
                 e.printStackTrace();
 
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 e.printStackTrace();
 
-            }
-            finally {
+            } finally {
                 try {
                     connection.close();
                 } catch (IOException e) {
@@ -220,6 +225,7 @@ public class socketServer {
             return null;
         }
     }
+
     public void acceptMsgMultiprocessPool() {
         //多线程服务端
         ExecutorService pool = Executors.newFixedThreadPool(50);
@@ -228,7 +234,7 @@ public class socketServer {
             while (true) {
                 try {
                     Socket sk = svSk.accept();
-                    Callable<Void> task= new sendTask(sk);
+                    Callable<Void> task = new sendTask(sk);
                     pool.submit(task);
                 } catch (IOException e) {
                     System.out.println(e);
@@ -240,10 +246,179 @@ public class socketServer {
         }
 
     }
+
+    public void chargenNio() {
+        //chargen 服务端
+        byte[] rotaion = new byte[95 * 2];
+        for (byte i = ' '; i <= '~'; i++) {
+            rotaion[i - ' '] = i;
+            rotaion[i + 95 - ' '] = i;
+        }
+        Selector selector;
+        ServerSocketChannel serverChannel;
+        try {
+            //服务端
+            serverChannel = ServerSocketChannel.open();
+            serverChannel.bind(new InetSocketAddress(2628));
+            serverChannel.configureBlocking(false);
+            selector = Selector.open();
+            serverChannel.register(selector, SelectionKey.OP_ACCEPT);
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+
+        }
+
+        while (true) {
+            try {
+                selector.select();
+            } catch (IOException e) {
+                e.printStackTrace();
+                break;
+            }
+
+            //
+
+            Set<SelectionKey> readyKeys = selector.selectedKeys();
+            Iterator<SelectionKey> iterator = readyKeys.iterator();
+            while (iterator.hasNext()) {
+                SelectionKey key = iterator.next();
+                iterator.remove();
+                try {
+                    if (key.isAcceptable()) {
+                        ServerSocketChannel server = (ServerSocketChannel) key.channel();
+                        SocketChannel clientChannel = server.accept();
+                        clientChannel.configureBlocking(false);
+                        SelectionKey key2 = clientChannel.register(selector, SelectionKey.OP_WRITE);
+                        ByteBuffer buffer = ByteBuffer.allocate(74);
+                        buffer.put(rotaion, 0, 72);
+                        buffer.put((byte) '\r');
+                        buffer.put((byte) '\n');
+                        buffer.flip();
+                        key2.attach(buffer);
+                    } else if (key.isWritable()) {
+                        SocketChannel client = (SocketChannel) key.channel();
+                        ByteBuffer buffer = (ByteBuffer) key.attachment();
+                        if (!buffer.hasRemaining()) {
+                            buffer.rewind();
+                            int first = buffer.get();
+                            buffer.rewind();
+                            int postion = first - ' ' + 1;
+                            buffer.put(rotaion, postion, 72);
+                            buffer.put((byte) '\r');
+                            buffer.put((byte) '\n');
+                            buffer.flip();
+                        }
+                        client.write(buffer);
+
+                    }
+                } catch (IOException e) {
+                    key.channel();
+                    try {
+                        key.channel().close();
+                    } catch (IOException io) {
+                        io.printStackTrace();
+                    }
+
+                }
+            }
+        }
+
+    }
+
+    public void integerServer() {
+        //intgen 服务端
+        Selector selector;
+        ServerSocketChannel serverChannel;
+        try {
+            //服务端
+            serverChannel = ServerSocketChannel.open();
+            serverChannel.bind(new InetSocketAddress(2628));
+            serverChannel.configureBlocking(false);
+            selector = Selector.open();
+            serverChannel.register(selector, SelectionKey.OP_ACCEPT);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+
+        }
+        while (true) {
+            try {
+                selector.select();
+            } catch (IOException e) {
+                e.printStackTrace();
+                break;
+            }
+
+            //
+
+            Set<SelectionKey> readyKeys = selector.selectedKeys();
+            Iterator<SelectionKey> iterator = readyKeys.iterator();
+            while (iterator.hasNext()) {
+                SelectionKey key = iterator.next();
+                iterator.remove();
+                try {
+                    if (key.isAcceptable()) {
+                        ServerSocketChannel server = (ServerSocketChannel) key.channel();
+                        SocketChannel clientChannel = server.accept();
+                        System.out.println("Accepted connect form " + clientChannel);
+                        clientChannel.configureBlocking(false);
+                        SelectionKey key2 = clientChannel.register(selector, SelectionKey.OP_WRITE);
+                        ByteBuffer buffer = ByteBuffer.allocate(74);
+                        buffer.putInt(0);
+                        buffer.flip();
+                        key2.attach(buffer);
+                    } else if (key.isWritable()) {
+                        SocketChannel client = (SocketChannel) key.channel();
+                        ByteBuffer buffer = (ByteBuffer) key.attachment();
+                        if (!buffer.hasRemaining()) {
+                            buffer.rewind();
+                            int value = buffer.getInt();
+                            buffer.clear();
+                            buffer.putInt(value + 1);
+                            buffer.flip();
+                        }
+                        client.write(buffer);
+
+                    }
+                } catch (IOException e) {
+                    key.channel();
+                    try {
+                        key.channel().close();
+                    } catch (IOException io) {
+                        io.printStackTrace();
+                    }
+
+                }
+            }
+        }
+    }
+    public void datagramServer(){
+        try(DatagramSocket server= new DatagramSocket(13) ) {
+           while (true){
+               try {
+                   DatagramPacket request= new DatagramPacket(new byte[1024],1024);
+                   server.receive(request);
+                   String  daytime=new Date().toString();
+                   byte [] data =daytime.getBytes("US-ASCII");
+                   DatagramPacket reponse= new DatagramPacket(data,data.length,request.getAddress(),request.getPort());
+                   server.send(reponse);
+
+               }
+               catch (IOException e){
+                  e.printStackTrace();
+               }
+           }
+        }catch (SocketException e){
+          e.printStackTrace();
+        }
+    }
     public static void main(String[] args) {
         socketServer ss = new socketServer();
 
-        ss.acceptMsgMultiprocessPool();
+        ss.datagramServer();
         // acceptMsg();
     }
 }
