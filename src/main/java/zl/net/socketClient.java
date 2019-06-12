@@ -234,8 +234,8 @@ public class socketClient {
         }
     }
     public  void multiprocessSendMsg(){
-        for(int i=0;i<25;i++){
-            new sendMsgThread("192.168.9.3",2628);
+        for(int i=0;i<1;i++){
+            new sendMsgThread("192.168.9.13",2628);
         }
     }
     static class AnalogUser extends Thread{
@@ -350,7 +350,7 @@ public class socketClient {
     public void integerClient(){
         //integer 客户端
         try{
-            SocketAddress address = new InetSocketAddress("192.168.9.13",2628);
+            SocketAddress address = new InetSocketAddress("192.168.93.1",2628);
             SocketChannel client = SocketChannel.open(address);
             ByteBuffer buffer = ByteBuffer.allocate(4);
             IntBuffer view =buffer.asIntBuffer();
@@ -376,7 +376,7 @@ public class socketClient {
         try {
             DatagramSocket socket = new DatagramSocket(0);
             socket.setSoTimeout(10000);
-            InetAddress host = InetAddress.getByName("192.168.9.13");
+            InetAddress host = InetAddress.getByName("149.28.36.180");
             DatagramPacket request= new DatagramPacket(new byte[1],1,host,13);
             DatagramPacket reponse= new DatagramPacket(new byte[1024],1024);
             socket.send(request);
@@ -400,7 +400,7 @@ public class socketClient {
     }
     public static void main(String[] args) {
         socketClient sc=new socketClient();
-        sc.udpDatagramClient();
+        sc.multiprocessSendMsg();
 
     }
 }

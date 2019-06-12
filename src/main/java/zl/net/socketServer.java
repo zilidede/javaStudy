@@ -228,6 +228,7 @@ public class socketServer {
 
     public void acceptMsgMultiprocessPool() {
         //多线程服务端
+        System.out.println("service start");
         ExecutorService pool = Executors.newFixedThreadPool(50);
         try {
             ServerSocket svSk = new ServerSocket(2628);
@@ -332,6 +333,7 @@ public class socketServer {
         //intgen 服务端
         Selector selector;
         ServerSocketChannel serverChannel;
+        System.out.println("service start");
         try {
             //服务端
             serverChannel = ServerSocketChannel.open();
@@ -396,6 +398,7 @@ public class socketServer {
         }
     }
     public void datagramServer(){
+        System.out.println("service start");
         try(DatagramSocket server= new DatagramSocket(13) ) {
            while (true){
                try {
@@ -418,7 +421,7 @@ public class socketServer {
     public static void main(String[] args) {
         socketServer ss = new socketServer();
 
-        ss.datagramServer();
+        ss.acceptMsgMultiprocessPool();
         // acceptMsg();
     }
 }
